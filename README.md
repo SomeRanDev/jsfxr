@@ -1,6 +1,16 @@
+# SomeRanDev Personal Changes
+* Export and load from `.json` files (currently submitted as PR on original)
+* Export and load from `.tres` files for Godot (for use with godot-sfxr)
+
+Try now at https://somerandev.github.io/jsfxr/
+
+---
+
+# Original README
+
 Quick 'n' easy game sound effects generator.
 
-App 👉 https://sfxr.me
+App 👉 https://somerandev.github.io/jsfxr/
 
 [About](#about) | [Use as a library](#library) | [Jsfxr Pro](#jsfxr-pro)
 
