@@ -46,6 +46,7 @@ function gen(fx) {
   }
   $("#wav").text(name + ".wav").attr("download", name + ".wav");
   $("#json").text(name + ".json").attr("download", name + ".json");
+  $("#jsfxr").text(name + ".jsfxr").attr("download", name + ".jsfxr");
   $("#tres").text(name + ".tres").attr("download", name + ".tres");
   updateUi();
   play();
@@ -75,7 +76,11 @@ function play(noregen) {
     }
     
     $("#wav").attr("href", SOUND.dataURI);
-    $("#json").attr("href", 'data:text/plain;charset=UTF-8,' + encodeURIComponent(serialize_params_to_string()));
+
+    var json_uri = 'data:text/plain;charset=UTF-8,' + encodeURIComponent(serialize_params_to_string());
+    $("#json").attr("href", json_uri);
+    $("#jsfxr").attr("href", json_uri);
+
     $("#tres").attr("href", 'data:text/plain;charset=UTF-8,' + encodeURIComponent(serialize_params_to_tres()));
     $("#sfx").attr("href", "sfx.wav?" + PARAMS.query());
     
@@ -322,7 +327,7 @@ button, #soundexport, #sound_vol {
   width: 80px;
 }
 
-#wav, #json, #tres {
+#wav, #json, #jsfxr, #tres {
   font-weight: bold;
 }
 
@@ -556,7 +561,7 @@ a {
   <p id="soundexport">
   Download:</br><a id="wav">sfx.wav</a> <br/>
   <br/>
-  Save As:</br><a id="json">sfx.json</a> <br/>
+  Save As:</br><a id="json">sfx.json</a> <br/><a id="jsfxr">sfx.jsfxr</a> <br/>
   <br/>
   Export for Godot:</br><a id="tres">sfx.tres</a> <br/>
   <!-- <a id="permalink"></a> -->
