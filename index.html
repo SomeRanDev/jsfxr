@@ -46,6 +46,7 @@ function gen(fx) {
   }
   $("#wav").text(name + ".wav").attr("download", name + ".wav");
   $("#json").text(name + ".json").attr("download", name + ".json");
+  $("#tres").text(name + ".tres").attr("download", name + ".tres");
   updateUi();
   play();
 }
@@ -75,6 +76,7 @@ function play(noregen) {
     
     $("#wav").attr("href", SOUND.dataURI);
     $("#json").attr("href", 'data:text/plain;charset=UTF-8,' + encodeURIComponent(serialize_params_to_string()));
+    $("#tres").attr("href", 'data:text/plain;charset=UTF-8,' + encodeURIComponent(serialize_params_to_tres()));
     $("#sfx").attr("href", "sfx.wav?" + PARAMS.query());
     
     SOUND.getAudio().play();
@@ -118,14 +120,91 @@ function on_upload_file_selected(e) {
   if (!file) {
     return;
   }
+  var is_tres = file.name.endsWith(".tres");
   var reader = new FileReader();
   reader.onload = function(e) {
     var contents = e.target.result;
+    if(is_tres) {
+      contents = convert_tres_contents_to_json(contents);
+    }
     $("textarea").val(contents);
     deserialize_params_from_string(contents);
     $("#open_save_impl").val("");
   };
   reader.readAsText(file);
+}
+
+function serialize_params_to_tres() {
+  return `[gd_resource type="AudioStreamWAV" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/godot_sfxr/SfxrAudioStream.gd" id="1_hhlq1"]
+
+[resource]
+script = ExtResource("1_hhlq1")
+wave/type = ${PARAMS.wave_type}
+sample_params/sound_vol = ${PARAMS.sound_vol}
+sample_params/sample_rate = ${PARAMS.sample_rate}
+envelope/attack_time = ${PARAMS.p_env_attack}
+envelope/sustain_time = ${PARAMS.p_env_sustain}
+envelope/punch_time = ${PARAMS.p_env_punch}
+envelope/decay_time = ${PARAMS.p_env_decay}
+frequency/start_frequency = ${PARAMS.p_base_freq}
+frequency/min_freq_cutoff = ${PARAMS.p_freq_limit}
+frequency/slide = ${PARAMS.p_freq_ramp}
+frequency/delta_slide = ${PARAMS.p_freq_dramp}
+vibrato/depth = ${PARAMS.p_vib_strength}
+vibrato/speed = ${PARAMS.p_vib_speed}
+arpeggiation/frequency_mult = ${PARAMS.p_arp_mod}
+arpeggiation/change_speed = ${PARAMS.p_arp_speed}
+duty_cycle/duty_cycle = ${PARAMS.p_duty}
+duty_cycle/sweep = ${PARAMS.p_duty_ramp}
+retrigger/rate = ${PARAMS.p_repeat_speed}
+flanger/offset = ${PARAMS.p_pha_offset}
+flanger/sweep = ${PARAMS.p_pha_ramp}
+low_pass_filter/cutoff_frequency = ${PARAMS.p_lpf_freq}
+low_pass_filter/cutoff_sweep = ${PARAMS.p_lpf_ramp}
+low_pass_filter/resonance = ${PARAMS.p_lpf_resonance}
+high_pass_filter/cutoff_frequency = ${PARAMS.p_hpf_freq}
+high_pass_filter/cutoff_sweep = ${PARAMS.p_hpf_ramp}
+metadata/_custom_type_script = "res://addons/godot_sfxr/SfxrAudioStream.gd"
+`;
+}
+
+function convert_tres_contents_to_json(contents) {
+  var result = {};
+  result.wave_type = get_value_from_tres(contents, "wave/type");
+  result.sound_vol = get_value_from_tres(contents, "sample_params/sound_vol");
+  result.sample_rate = get_value_from_tres(contents, "sample_params/sample_rate");
+  result.p_env_attack = get_value_from_tres(contents, "envelope/attack_time");
+  result.p_env_sustain = get_value_from_tres(contents, "envelope/sustain_time");
+  result.p_env_punch = get_value_from_tres(contents, "envelope/punch_time");
+  result.p_env_decay = get_value_from_tres(contents, "envelope/decay_time");
+  result.p_base_freq = get_value_from_tres(contents, "frequency/start_frequency");
+  result.p_freq_limit = get_value_from_tres(contents, "frequency/min_freq_cutoff");
+  result.p_freq_ramp = get_value_from_tres(contents, "frequency/slide");
+  result.p_freq_dramp = get_value_from_tres(contents, "frequency/delta_slide");
+  result.p_vib_strength = get_value_from_tres(contents, "vibrato/depth");
+  result.p_vib_speed = get_value_from_tres(contents, "vibrato/speed");
+  result.p_arp_mod = get_value_from_tres(contents, "arpeggiation/frequency_mult");
+  result.p_arp_speed = get_value_from_tres(contents, "arpeggiation/change_speed");
+  result.p_duty = get_value_from_tres(contents, "duty_cycle/duty_cycle");
+  result.p_duty_ramp = get_value_from_tres(contents, "duty_cycle/sweep");
+  result.p_repeat_speed = get_value_from_tres(contents, "retrigger/rate");
+  result.p_pha_offset = get_value_from_tres(contents, "flanger/offset");
+  result.p_pha_ramp = get_value_from_tres(contents, "flanger/sweep");
+  result.p_lpf_freq = get_value_from_tres(contents, "low_pass_filter/cutoff_frequency");
+  result.p_lpf_ramp = get_value_from_tres(contents, "low_pass_filter/cutoff_sweep");
+  result.p_lpf_resonance = get_value_from_tres(contents, "low_pass_filter/resonance");
+  result.p_hpf_freq = get_value_from_tres(contents, "high_pass_filter/cutoff_frequency");
+  result.p_hpf_ramp = get_value_from_tres(contents, "high_pass_filter/cutoff_sweep");
+  return JSON.stringify(result);
+}
+
+function get_value_from_tres(tres_content, name) {
+  if(tres_content.match(new RegExp(name + " = ([\\d\\.]+)", "i"))) {
+    return parseFloat(RegExp.$1);
+  }
+  return 0.0;
 }
 
 function disenable() {
@@ -243,7 +322,7 @@ button, #soundexport, #sound_vol {
   width: 80px;
 }
 
-#wav, #json {
+#wav, #json, #tres {
   font-weight: bold;
 }
 
@@ -478,6 +557,8 @@ a {
   Download:</br><a id="wav">sfx.wav</a> <br/>
   <br/>
   Save As:</br><a id="json">sfx.json</a> <br/>
+  <br/>
+  Export for Godot:</br><a id="tres">sfx.tres</a> <br/>
   <!-- <a id="permalink"></a> -->
   <!-- <a id="sfx">sfx.wav</a><br/> -->
 
@@ -525,7 +606,7 @@ a {
   <button onclick="serialize_params();"> ▼ Serialize</button>
   <button onclick="deserialize_params()"> ▲ Deserialize</button>
   <button onclick="upload_params_from_file()"> ⇧ Open Save</button>
-  <input type="file" id="open_save_impl" accept="application/JSON" onchange="on_upload_file_selected.apply(this, arguments)" />
+  <input type="file" id="open_save_impl" accept="application/JSON,.tres" onchange="on_upload_file_selected.apply(this, arguments)" />
   <div id="serialize">
     <textarea></textarea>
     <button onclick="$('textarea').select(); document.execCommand('copy');">Copy</button>
